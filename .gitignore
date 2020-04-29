@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# personal ignore files
+.idea/
+tmp.py
+energy_histogram.png
+.vscode/settings.json
