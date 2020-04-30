@@ -20,7 +20,7 @@ def load_material_data(data_location):
 
 def load_material_data_train_test_split(data_location):
     X,_,atom_type,_ = load_material_data(data_location)
-    y = atom_type - 1
+    y = np.array(atom_type - 1, dtype=int)
     for i in range(7):
         cnt = np.count_nonzero(atom_type == (i+1))
         print("Type %d : %d" % (i+1, cnt))

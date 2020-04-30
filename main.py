@@ -55,7 +55,7 @@ parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-parser.add_argument('--epochs', type=int, default=10, metavar='N',
+parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -81,7 +81,7 @@ test_dataset = ndarrayDataset(X_test,y_test)
 test_loader = DataLoader(test_dataset, batch_size = args.test_batch_size)
 test_losses = np.zeros((args.epochs))
 
-model = MLP(3600,100,7).to(device)
+model = MLP(3600,200,7).to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 criterion = nn.CrossEntropyLoss(reduction='sum')
 
@@ -112,6 +112,7 @@ def train(epoch):
     print('====> Epoch: {} Average loss: {:.4f}, Train Accuracy: {}/{} ({:.0f}%)\n'.format(
           epoch, train_loss / len(train_loader.dataset), correct, len(train_loader.dataset),
         100. * correct / len(train_loader.dataset)))
+    return 100. * correct / len(train_loader.dataset)
 
 
 def test(epoch):
@@ -130,13 +131,18 @@ def test(epoch):
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
+    
+    return 100. * correct / len(test_loader.dataset)
 
 
 if __name__ == "__main__":
-    # import matplotlib.pyplot as plt
-    # plt.hist(y[np.logical_and(atom_type==2, y<10)], 100, facecolor='blue', alpha=0.5)
-    # plt.show()
-    # plt.savefig('energy_histogram.png')
+    train_acc_list = []
+    test_acc_list = []
     for epoch in range(1, args.epochs + 1):
-        train(epoch)
-        test(epoch)
+        train_acc = train(epoch)
+        test_acc = test(epoch)
+        train_acc_list.append(train_acc)
+        test_acc_list.append(test_acc)
+    with open('checkpoints/baseline.npz','wb') as f:
+        np.savez(f, train_acc = train_acc_list, test_acc = test_acc_list)
+

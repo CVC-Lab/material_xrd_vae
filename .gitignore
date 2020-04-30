@@ -130,6 +130,8 @@ dmypy.json
 
 # personal ignore files
 .idea/
+checkpoints/
+.vscode/
 tmp.py
-energy_histogram.png
+*.png
 .vscode/settings.json
