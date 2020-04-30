@@ -30,3 +30,11 @@ def load_material_data_train_test_split(data_location):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=9)
 
     return X_train, X_test, y_train, y_test
+
+
+def safe_log(z):
+    return torch.log(z + 1e-7)
+
+
+def random_normal_samples(n, dim=2):
+    return torch.zeros(n, dim).normal_(mean=0, std=1)
