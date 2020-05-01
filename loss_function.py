@@ -3,6 +3,7 @@ import torch
 import numpy as np
 from torch import nn
 from torch.nn import functional as F
+from utils import safe_log
 
 
 def simplevae_elbo_loss_function(recon_x, x, mu, logvar):
@@ -103,3 +104,16 @@ class GMVAELossFunctions:
         """
         log_q = F.log_softmax(logits, dim=-1)
         return -torch.mean(torch.sum(targets * log_q, dim=-1))
+
+
+class FreeEnergyBound(nn.Module):
+
+    def __init__(self, density):
+        super().__init__()
+
+        self.density = density
+
+    def forward(self, zk, log_jacobians):
+
+        sum_of_log_jacobians = sum(log_jacobians)
+        return (-sum_of_log_jacobians - safe_log(self.density(zk))).mean()

@@ -50,11 +50,11 @@ parser.add_argument('--hidden-size', default=40, type=int,
 parser.add_argument('--input-size', default=3600, type=int,
                     help='input size (default: 3600)')
 
-parser.add_argument('--num-polynomials', type=int, default=2,
+parser.add_argument('--num-polynomials', type=int, default=5,
                     help='number of polynomials (default: 5)')
-parser.add_argument('--degree', default=1, type=int,
+parser.add_argument('--degree', default=3, type=int,
                     help='polynomial degrees (default: 3)')
-parser.add_argument('--n-blocks', default=2, type=int,
+parser.add_argument('--n-blocks', default=4, type=int,
                     help='number of blocks (default: 4)')
 
 ## Others
@@ -95,5 +95,7 @@ sosflow = SOSFlow(args)
 ## Training Phase
 history_loss = sosflow.train(train_loader, test_loader)
 
-# with open('checkpoints/GMVAE.npz','wb') as f:
-#   np.savez(f, train_acc = history_loss['train_history_acc'], test_acc = history_loss['val_history_acc'])
+torch.save(sosflow.network.state_dict(), 'checkpoints/SOSflow.pth')
+
+with open('checkpoints/sosflow.npz','wb') as f:
+  np.savez(f, train_loss = history_loss['train_history_err'], test_loss = history_loss['val_history_err'])

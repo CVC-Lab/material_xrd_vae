@@ -2,8 +2,6 @@ import torch
 import numpy as np
 from torch import nn, optim
 from model.SOSFlowNet import SOSFlowNet,BatchNormFlow,Reverse,FlowSequential
-from loss_function import GMVAELossFunctions
-from metric import Metrics
 import matplotlib.pyplot as plt
 
 def build_model(input_size, hidden_size, k, r, n_blocks, device=None, **kwargs):
@@ -115,7 +113,7 @@ class SOSFlow:
             # predicted_labels_list.append(predicted)   
         
             num_batches += 1. 
-            if num_batches % 20 == 0:
+            if num_batches % 50 == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, num_batches * len(data), len(data_loader.dataset),
                     100. * num_batches / len(data_loader),  total_loss_func.item()))
@@ -126,7 +124,8 @@ class SOSFlow:
         total_loss /= num_batches
         recon_loss /= num_batches
         flow_loss /= num_batches
-        print('====> Epoch: {} Average loss per batch: {:.4f}\n'.format(epoch, total_loss))
+        print('====> Epoch: {} Average loss per batch: {:.4f}; recon loss: {:.4f}; flow loss: {:.4f}\n'.format(epoch, total_loss, recon_loss, flow_loss))
+        
         # # concat all true and predicted labels
         # true_labels = torch.cat(true_labels_list, dim=0).cpu().numpy()
         # predicted_labels = torch.cat(predicted_labels_list, dim=0).cpu().numpy()
