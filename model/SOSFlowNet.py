@@ -28,7 +28,8 @@ def get_mask(in_features, out_features, in_flow_features, mask_type=None):
         out_degrees = torch.arange(out_features) % in_flow_features - 1
     else:
         out_degrees = torch.arange(out_features) % (in_flow_features - 1)
-
+    in_degrees = in_degrees.long()
+    out_degrees = out_degrees.long()
     return (out_degrees.unsqueeze(-1) >= in_degrees.unsqueeze(0)).float()
 
 
@@ -110,7 +111,7 @@ class SOSFlowNet(nn.Module):
     def forward(self, inputs, mode='direct'):
         batch_size, input_size = inputs.size(0), inputs.size(1)
         C, const = self.conditioner(inputs)
-        X = SOSFlow.power(inputs.unsqueeze(-1), self.m).view(batch_size, input_size, 1, self.m,
+        X = SOSFlowNet.power(inputs.unsqueeze(-1), self.m).view(batch_size, input_size, 1, self.m,
                                                               1)  # bs x d x 1 x m x 1
         Z = self._transform(X, C / self.filter) * inputs + const
         logdet = torch.log(torch.abs(self._transform(X, C))).sum(dim=1, keepdim=True)
@@ -130,7 +131,7 @@ class SOSFlowNet(nn.Module):
 
         X_in = X.unsqueeze(0)
         C, const = self.conditioner(X_in)
-        Xpow = SOSFlow.power(X_in.unsqueeze(-1), self.m).view(1, d, 1, self.m,
+        Xpow = SOSFlowNet.power(X_in.unsqueeze(-1), self.m).view(1, d, 1, self.m,
                                                              1)  # bs x d x 1 x m x 1
         Z = (self._transform(Xpow, C / self.filter) * X_in + const).view(-1)
 
