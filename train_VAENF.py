@@ -8,7 +8,7 @@ import os
 import torch
 from torch.utils.data import DataLoader
 from utils import load_material_data_train_test_split
-from GMVAE import GMVAE
+from NormalizingFlow import NormalizingFlow
 from dataset import ndarrayDataset
 
 #########################################################
@@ -28,11 +28,11 @@ parser.add_argument('--seed', type=int, default=0, help='random seed (default: 0
 ## GPU
 parser.add_argument('--cuda', type=int, default=1,
                     help='use of cuda (default: 1)')
-parser.add_argument('--gpuID', type=int, default=2,
+parser.add_argument('--gpuID', type=int, default=0,
                     help='set gpu id to use (default: 0)')
 
 ## Training
-parser.add_argument('--epochs', type=int, default=100,
+parser.add_argument('--epochs', type=int, default=1000,
                     help='number of total epochs to run (default: 200)')
 parser.add_argument('--batch_size', default=64, type=int,
                     help='mini-batch size (default: 64)')
@@ -50,48 +50,14 @@ parser.add_argument('--lr_decay', default=0.5, type=float,
 ## Architecture
 parser.add_argument('--num_classes', type=int, default=7,
                     help='number of classes (default: 7)')
-parser.add_argument('--gaussian_size', default=40, type=int,
+parser.add_argument('--hidden_size', default=40, type=int,
                     help='gaussian size (default: 20)')
 parser.add_argument('--input_size', default=3600, type=int,
                     help='input size (default: 3600)')
-
-## Partition parameters
-parser.add_argument('--train_proportion', default=1.0, type=float,
-                    help='proportion of examples to consider for training only (default: 1.0)')
-
-## Gumbel parameters
-parser.add_argument('--init_temp', default=1.0, type=float,
-                    help='Initial temperature used in gumbel-softmax (recommended 0.5-1.0, default:1.0)')
-parser.add_argument('--decay_temp', default=1, type=int, 
-                    help='Set 1 to decay gumbel temperature at every epoch (default: 1)')
-parser.add_argument('--hard_gumbel', default=0, type=int, 
-                    help='Set 1 to use the hard version of gumbel-softmax (default: 1)')
-parser.add_argument('--min_temp', default=0.5, type=float, 
-                    help='Minimum temperature of gumbel-softmax after annealing (default: 0.5)' )
-parser.add_argument('--decay_temp_rate', default=0.013862944, type=float,
-                    help='Temperature decay rate at every epoch (default: 0.013862944)')
-
-## Loss function parameters
-parser.add_argument('--w_gauss', default=1, type=float,
-                    help='weight of gaussian loss (default: 1)')
-parser.add_argument('--w_categ', default=1, type=float,
-                    help='weight of categorical loss (default: 1)')
-parser.add_argument('--w_rec', default=1, type=float,
-                    help='weight of reconstruction loss (default: 1)')
-parser.add_argument('--rec_type', type=str, choices=['bce', 'mse'],
-                    default='mse', help='desired reconstruction loss function (default: bce)')
-
-## Others
-parser.add_argument('--verbose', default=0, type=int,
-                    help='print extra information at every epoch.(default: 0)')
-parser.add_argument('--random_search_it', type=int, default=20,
-                    help='iterations of random search (default: 20)')
+parser.add_argument('--n-blocks', default=4, type=int,
+                    help='number of blocks (default: 4)')
 
 args = parser.parse_args()
-
-if args.cuda == 1:
-   os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpuID)
-
 ## Random Seed
 SEED = args.seed
 np.random.seed(SEED)
@@ -117,17 +83,12 @@ print(args.input_size)
 #########################################################
 ## Train and Test Model
 #########################################################
-gmvae = GMVAE(args)
+vaenf = NormalizingFlow(args)
 
 ## Training Phase
-history_loss = gmvae.train(train_loader, test_loader)
+history_loss = vaenf.train(train_loader, test_loader)
 
-with open('checkpoints/GMVAE.npz','wb') as f:
-  np.savez(f, train_acc = history_loss['train_history_acc'], test_acc = history_loss['val_history_acc'])
-torch.save(gmvae.network.state_dict(), 'checkpoints/GMVAE_100.pth')
-
-## Testing Phase
-accuracy, nmi = gmvae.test(test_loader)
-print("Testing phase...")
-print("Accuracy: %.5lf, NMI: %.5lf" % (accuracy, nmi) )
+with open('checkpoints/vaenf.npz','wb') as f:
+  np.savez(f, train_loss = history_loss['train_history_err'], test_loss = history_loss['val_history_err'])
+torch.save(vaenf.network.state_dict(), 'checkpoints/VAENF_1000.pth')
 

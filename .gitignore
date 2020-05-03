@@ -131,6 +131,7 @@ dmypy.json
 # personal ignore files
 .idea/
 checkpoints/
+results/
 .vscode/
 tmp.py
 *.png

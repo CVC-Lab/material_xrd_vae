@@ -106,14 +106,43 @@ class GMVAELossFunctions:
         return -torch.mean(torch.sum(targets * log_q, dim=-1))
 
 
-class FreeEnergyBound(nn.Module):
+class VAENFLoss:
+    def reconstruction_loss(self, recon_x, x):
+        """Loss based on binary cross entropy between original and reconstructed input
 
-    def __init__(self, density):
-        super().__init__()
+        Args
+        recon_x  -- reconstructed input
+        x        -- original input
 
-        self.density = density
+        Returns binary cross entropy between x and x_recon
+        """
+        return F.mse_loss(recon_x, x.view(-1, recon_x.shape[-1]), reduction='mean')
 
-    def forward(self, zk, log_jacobians):
+    def kld_loss(self, mu, logvar):
+        """Loss based on KL-divergence"""
+        # see Appendix B from VAE paper:
+        # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+        # https://arxiv.org/abs/1312.6114
+        # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+        return -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
 
-        sum_of_log_jacobians = sum(log_jacobians)
-        return (-sum_of_log_jacobians - safe_log(self.density(zk))).mean()
+    def VAE_loss(self, recon_x, x, mu, logvar):
+        """Variational Autoencoder loss
+        Args:
+        recon_x   -- reconstruction of x
+        x         -- original x
+        mu        -- amortized mean
+        logvar    -- amortized log variance
+        """
+        return self.reconstruction_loss(recon_x, x) + self.kld_loss(mu, logvar) / x.size(0)
+
+    def VAENF_loss(self, recon_x, x, mu, logvar, sum_log_det):
+        """Variational Autoencoder with Normalizing Flow loss
+        Args:
+        recon_x      -- reconstruction of x
+        x            -- original x
+        mu           -- amortized mean
+        logvar       -- amortized log variance
+        sum_log_det  -- sum of log jacobians
+        """
+        return self.VAE_loss(recon_x, x, mu, logvar) - sum_log_det.mean()
