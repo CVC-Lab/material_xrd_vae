@@ -27,13 +27,13 @@ parser.add_argument('--gpu', type=int, default=0,
                     help='set gpu id to use (default: 0)')
 
 ## Training
-parser.add_argument('--epochs', type=int, default=10,
+parser.add_argument('--epochs', type=int, default=20,
                     help='number of total epochs to run (default: 200)')
-parser.add_argument('--batch-size', default=64, type=int,
+parser.add_argument('--batch-size', default=128, type=int,
                     help='mini-batch size (default: 64)')
 parser.add_argument('--batch-size-val', default=200, type=int,
                     help='mini-batch size of validation (default: 200)')
-parser.add_argument('--learning-rate', default=1e-3, type=float,
+parser.add_argument('--learning-rate', default=1e-4, type=float,
                     help='learning rate (default: 0.001)')
 
 # useless config right now
@@ -50,11 +50,11 @@ parser.add_argument('--hidden-size', default=40, type=int,
 parser.add_argument('--input-size', default=3600, type=int,
                     help='input size (default: 3600)')
 
-parser.add_argument('--num-polynomials', type=int, default=5,
+parser.add_argument('--num-polynomials', type=int, default=3,
                     help='number of polynomials (default: 5)')
-parser.add_argument('--degree', default=3, type=int,
+parser.add_argument('--degree', default=1, type=int,
                     help='polynomial degrees (default: 3)')
-parser.add_argument('--n-blocks', default=4, type=int,
+parser.add_argument('--n-blocks', default=3, type=int,
                     help='number of blocks (default: 4)')
 
 ## Others

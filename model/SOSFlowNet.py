@@ -284,6 +284,7 @@ class FlowSequential(nn.Sequential):
         samples = self.forward(noise, cond_inputs, mode='inverse')[0]
         return samples
 
+
     def jacobians(self, X):
         assert len(X.size()) == 1
         N = len(self._modules)

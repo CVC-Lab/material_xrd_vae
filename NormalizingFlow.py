@@ -20,26 +20,6 @@ class NormalizingFlow:
         self.criterion = VAENFLoss()
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate, weight_decay=1e-6)
 
-
-    def flow_loss(self, z, logdet, size_average=True, use_cuda=True):
-        # If using Student-t as source distribution#
-        #df = torch.tensor(5.0)
-        #if use_cuda:
-        #   log_prob = log_prob_st(z, torch.tensor([5.0]).cuda())
-        #else:
-            #log_prob = log_prob_st(z, torch.tensor([5.0]))
-        #log_probs = log_prob.sum(-1, keepdim=True)
-        ''' If using Uniform as source distribution
-        log_probs = 0
-        '''
-        log_probs = (-0.5 * z.pow(2) - 0.5 * np.log(2 * np.pi)).sum(-1, keepdim=True)
-        loss = -(log_probs + logdet).sum()
-        # CHANGED TO UNIFORM SOURCE DISTRIBUTION
-        #loss = -(logdet).sum()
-        if size_average:
-            loss /= z.size(0)
-        return loss
-
         
     def train_epoch(self, epoch, optimizer, data_loader):
         """Train the model for one epoch

@@ -9,12 +9,15 @@ from utils import load_material_data_train_test_split
 from SOSFlow import build_model
 from model.GMVAENet import GMVAENet
 from model.NormalizingFlowNet import VAENF,PlanarTransformation
+from model.baselines import SimpleVAE
 from dataset import ndarrayDataset
 from matplotlib import pyplot as plt
 
 device = torch.device("cuda:0")
-model = VAENF(3600, 40, PlanarTransformation, 40, 4)
-model.load_state_dict(torch.load('checkpoints/VAENF_20.pth'))
+#model = VAENF(3600, 40, PlanarTransformation, 40, 4)
+#model = SimpleVAE(3600, 200, 40)
+model = build_model(3600, 40, 3, 1, 3)
+model.load_state_dict(torch.load('checkpoints/SOSflow.pth'))
 
 data_location = "/mnt/storage/tmwang/Materials/MP.mat"
 _,X_test,_,y_test = load_material_data_train_test_split(data_location)
@@ -29,7 +32,7 @@ print(data.shape)
 data = data.to(device)
 model.to(device)
 
-x_rec, _, _ = model(data)
+x_rec, _ = model(data)
 
 recon_data = x_rec.detach().cpu().numpy()
 
@@ -46,5 +49,5 @@ for row in ax:
         count += 1
 
 plt.show()
-plt.savefig('results/XRD_recon_VAENF_20.png')
+plt.savefig('results/XRD_recon_VAE_20.png')
 

@@ -32,13 +32,13 @@ parser.add_argument('--gpuID', type=int, default=0,
                     help='set gpu id to use (default: 0)')
 
 ## Training
-parser.add_argument('--epochs', type=int, default=1000,
+parser.add_argument('--epochs', type=int, default=20,
                     help='number of total epochs to run (default: 200)')
 parser.add_argument('--batch_size', default=64, type=int,
                     help='mini-batch size (default: 64)')
 parser.add_argument('--batch_size_val', default=200, type=int,
                     help='mini-batch size of validation (default: 200)')
-parser.add_argument('--learning_rate', default=1e-3, type=float,
+parser.add_argument('--learning_rate', default=1e-5, type=float,
                     help='learning rate (default: 0.001)')
 
 # useless config right now
@@ -54,7 +54,7 @@ parser.add_argument('--hidden_size', default=40, type=int,
                     help='gaussian size (default: 20)')
 parser.add_argument('--input_size', default=3600, type=int,
                     help='input size (default: 3600)')
-parser.add_argument('--n-blocks', default=4, type=int,
+parser.add_argument('--n-blocks', default=10, type=int,
                     help='number of blocks (default: 4)')
 
 args = parser.parse_args()
@@ -90,5 +90,5 @@ history_loss = vaenf.train(train_loader, test_loader)
 
 with open('checkpoints/vaenf.npz','wb') as f:
   np.savez(f, train_loss = history_loss['train_history_err'], test_loss = history_loss['val_history_err'])
-torch.save(vaenf.network.state_dict(), 'checkpoints/VAENF_1000.pth')
+torch.save(vaenf.network.state_dict(), 'checkpoints/VAENF_%d.pth' % args.epochs)
 

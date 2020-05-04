@@ -55,7 +55,7 @@ from model.baselines import SimpleVAE
 parser = argparse.ArgumentParser(description='Test')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=100, metavar='N',
+parser.add_argument('--epochs', type=int, default=20, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -83,7 +83,7 @@ test_loader = DataLoader(test_dataset, batch_size=1)
 test_losses = np.zeros((args.epochs))
 
 model = SimpleVAE(3600,200,40).to(device)
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
+optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
 
 def train(epoch):
@@ -94,13 +94,13 @@ def train(epoch):
         data = data.to(device)
         y = y.long().to(device)
         optimizer.zero_grad()
-        y_pred, mu, logvar = model(data)
-        loss = simplevae_elbo_loss_function(y_pred, y, mu, logvar)
+        x_pred, mu, logvar = model(data)
+        loss = simplevae_elbo_loss_function(x_pred, data, mu, logvar)
         loss.backward()
         train_loss += loss.item()
         optimizer.step()
-        pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
-        correct += pred.eq(y.view_as(pred)).sum().item()
+        #pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+        #correct += pred.eq(y.view_as(pred)).sum().item()
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
@@ -109,7 +109,7 @@ def train(epoch):
 
     print('====> Epoch: {} Average loss: {:.4f}'.format(
           epoch, train_loss / len(train_loader.dataset)))
-    return 100. * correct / len(train_loader.dataset)
+    return train_loss / len(train_loader.dataset)
 
 
 def test(epoch):
@@ -120,24 +120,25 @@ def test(epoch):
         for i, (data, y) in enumerate(test_loader):
             data = data.to(device)
             y = y.long().to(device)
-            y_pred, mu, logvar = model(data)
-            test_loss += (simplevae_elbo_loss_function(y_pred, y, mu, logvar).item())
-            pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
-            correct += pred.eq(y.view_as(pred)).sum().item()
+            x_pred, mu, logvar = model(data)
+            test_loss += (simplevae_elbo_loss_function(x_pred, data, mu, logvar).item())
+            #pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+            #correct += pred.eq(y.view_as(pred)).sum().item()
 
     test_loss /= len(test_loader.dataset)
     print('====> Test set loss: {:.4f}'.format(test_loss))
-    return 100. * correct / len(test_loader.dataset)
+    return test_loss
 
 
 
 if __name__ == "__main__":
-    train_acc_list = []
-    test_acc_list = []
+    train_err_list = []
+    test_err_list = []
     for epoch in range(1, args.epochs + 1):
-        train_acc = train(epoch)
-        test_acc = test(epoch)
-        train_acc_list.append(train_acc)
-        test_acc_list.append(test_acc)
+        train_err = train(epoch)
+        test_err = test(epoch)
+        train_err_list.append(train_err)
+        test_err_list.append(test_err)
     with open('checkpoints/simpleVAE.npz','wb') as f:
-        np.savez(f, train_acc = train_acc_list, test_acc = test_acc_list)
+        np.savez(f, train_err = train_err_list, test_err = test_err_list)
+    torch.save(model.state_dict(),'checkpoints/VAE_%d.pth' % args.epochs)

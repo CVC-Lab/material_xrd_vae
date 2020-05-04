@@ -27,18 +27,18 @@ class SimpleVAE(nn.Module):
     """
     Simple VAE
     """
-    def __init__(self, input_dim, hidden_dim, out_dim):
+    def __init__(self, input_dim, hidden_dim, latent_dim):
         super(SimpleVAE, self).__init__()
         self.input = input_dim
         self.hidden = hidden_dim
-        self.output = out_dim
+        self.latent = latent_dim
         self.fc1 = nn.Linear(self.input, self.hidden)
         self.relu1 = nn.ReLU()
-        self.fc21 = nn.Linear(self.hidden, self.output)
-        self.fc22 = nn.Linear(self.hidden, self.output)
-        self.fc3 = nn.Linear(self.output, 20)
-        self.relu2 = nn.ReLU()
-        self.fc4 = nn.Linear(20, 7)
+        self.fc21 = nn.Linear(self.hidden, self.latent)
+        self.fc22 = nn.Linear(self.hidden, self.latent)
+        self.fc3 = nn.Linear(self.latent, self.hidden)
+        self.relu2 = nn.LeakyReLU()
+        self.fc4 = nn.Linear(self.hidden, self.input)
 
     def encode(self, x):
         out = self.relu1(self.fc1(x))
