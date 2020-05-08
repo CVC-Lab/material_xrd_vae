@@ -50,7 +50,7 @@ parser.add_argument('--lr_decay', default=0.5, type=float,
 ## Architecture
 parser.add_argument('--num_classes', type=int, default=7,
                     help='number of classes (default: 7)')
-parser.add_argument('--gaussian_size', default=40, type=int,
+parser.add_argument('--gaussian_size', default=7, type=int,
                     help='gaussian size (default: 20)')
 parser.add_argument('--input_size', default=3600, type=int,
                     help='input size (default: 3600)')
@@ -121,10 +121,14 @@ gmvae = GMVAE(args)
 
 ## Training Phase
 history_loss = gmvae.train(train_loader, test_loader)
+features = gmvae.latent_features(train_loader)
+
+with open('results/GMVAE_latent.npy','wb') as f:
+  np.save(f, features)
 
 with open('checkpoints/GMVAE.npz','wb') as f:
   np.savez(f, train_acc = history_loss['train_history_acc'], test_acc = history_loss['val_history_acc'])
-torch.save(gmvae.network.state_dict(), 'checkpoints/GMVAE_100.pth')
+torch.save(gmvae.network.state_dict(), 'checkpoints/GMVAE_%d.pth' % args.epochs)
 
 ## Testing Phase
 accuracy, nmi = gmvae.test(test_loader)

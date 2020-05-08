@@ -1,0 +1,1 @@
+# Using RNN-type network as encoder/decoder

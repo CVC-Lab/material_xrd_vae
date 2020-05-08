@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 import math
+from .baselines import MLP_2layer
 
 """
 Comes from https://git.uwaterloo.ca/pjaini/SOS-Flows
@@ -300,3 +301,31 @@ class FlowSequential(nn.Sequential):
             del J_i
 
         return jacobians[:n_jacob,:,:]
+
+
+class SOSFlowVAE(nn.Module):
+    def __init__(self, input_size, mlp_hidden_size, project_size, hidden_size, k, r, n_blocks, device):
+        super(SOSFlowVAE, self).__init__()
+        self.encoder = MLP_2layer(input_size, mlp_hidden_size, project_size)
+        self.decoder = MLP_2layer(project_size, mlp_hidden_size, input_size)
+        self.num_polynomials = k
+        self.poly_degree = r
+        self.n_blocks = n_blocks
+        self.device = device
+
+        self.transform = []
+        for _ in range(self.n_blocks):
+            self.transform += [
+                SOSFlowNet(project_size, hidden_size, k, r).to(device),
+                BatchNormFlow(project_size).to(device)
+            ]
+    
+    def forward(self, inputs):
+        inputs = self.encoder(inputs)
+        self.num_inputs = inputs.size(-1)
+        logdets = torch.zeros(inputs.size(0), 1, device=inputs.device)
+        for _, module in enumerate(self.transform):
+            inputs, logdet = module(inputs)
+            logdets += logdet
+        inputs = self.decoder(inputs)
+        return inputs, logdets

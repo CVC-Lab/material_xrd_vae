@@ -22,7 +22,7 @@ atom_type = input_mat[:,1]
 energy = input_mat[:,2] # target value
 X = input_mat[:,3:] # training data
 
-y = atom_type - 1
+y = energy
 
 # for i in range(7):
 #     cnt = np.count_nonzero(atom_type == (i+1))
@@ -30,14 +30,14 @@ y = atom_type - 1
 print(np.max(y),np.min(y))
 
 # First train everything
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=9)
+X_train, X_test, y_train, y_test, l_train, l_test = train_test_split(X, y, atom_type, test_size=0.20, shuffle=True, random_state=9)
 
-for i in range(7):
-    cnt = np.count_nonzero(y_train == i)
-    print("Type %d : %d" % (i+1, cnt))
-for i in range(7):
-    cnt = np.count_nonzero(y_test == i)
-    print("Type %d : %d" % (i+1, cnt))
+# for i in range(7):
+#     cnt = np.count_nonzero(l_train == i)
+#     print("Type %d : %d" % (i+1, cnt))
+# for i in range(7):
+#     cnt = np.count_nonzero(l_test == i)
+#     print("Type %d : %d" % (i+1, cnt))
 """
 
 Body part of train/test
@@ -49,13 +49,13 @@ import torch
 import torch.utils.data
 from torch import nn, optim
 from torch.utils.data import DataLoader
-from loss_function import simplevae_elbo_loss_function
+from loss_function import simplevae_elbo_loss_function, simplevae_elbo_loss_function_with_energy
 from model.baselines import SimpleVAE
 
 parser = argparse.ArgumentParser(description='Test')
-parser.add_argument('--batch-size', type=int, default=128, metavar='N',
+parser.add_argument('--batch-size', type=int, default=256, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=20, metavar='N',
+parser.add_argument('--epochs', type=int, default=100, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -79,7 +79,7 @@ train_dataset = ndarrayDataset(X_train,y_train)
 train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle=True)
 train_losses = np.zeros((args.epochs))
 test_dataset = ndarrayDataset(X_test,y_test)
-test_loader = DataLoader(test_dataset, batch_size=1)
+test_loader = DataLoader(test_dataset, batch_size=1000)
 test_losses = np.zeros((args.epochs))
 
 model = SimpleVAE(3600,200,40).to(device)
@@ -92,12 +92,12 @@ def train(epoch):
     correct = 0
     for batch_idx, (data, y) in enumerate(train_loader):
         data = data.to(device)
-        y = y.long().to(device)
+        y = y.view(-1,1).to(device)
         optimizer.zero_grad()
-        x_pred, mu, logvar = model(data)
-        loss = simplevae_elbo_loss_function(x_pred, data, mu, logvar)
+        x_pred, mu, logvar, y_pred = model(data)
+        loss, _,_, eng_loss = simplevae_elbo_loss_function_with_energy(x_pred, data, mu, logvar, y_pred, y)
         loss.backward()
-        train_loss += loss.item()
+        train_loss += eng_loss.item()
         optimizer.step()
         #pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
         #correct += pred.eq(y.view_as(pred)).sum().item()
@@ -106,10 +106,10 @@ def train(epoch):
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader),
                 loss.item() / len(data)))
-
-    print('====> Epoch: {} Average loss: {:.4f}'.format(
-          epoch, train_loss / len(train_loader.dataset)))
-    return train_loss / len(train_loader.dataset)
+    train_loss /= len(train_loader.dataset)
+    print('====> Epoch: {} Average Evergy loss: {:.4f}'.format(
+          epoch, train_loss))
+    return train_loss
 
 
 def test(epoch):
@@ -119,9 +119,10 @@ def test(epoch):
     with torch.no_grad():
         for i, (data, y) in enumerate(test_loader):
             data = data.to(device)
-            y = y.long().to(device)
-            x_pred, mu, logvar = model(data)
-            test_loss += (simplevae_elbo_loss_function(x_pred, data, mu, logvar).item())
+            y = y.view(-1,1).to(device)
+            x_pred, mu, logvar, y_pred = model(data)
+            _, _, _, eng_loss = simplevae_elbo_loss_function_with_energy(x_pred, data, mu, logvar, y_pred, y)
+            test_loss += eng_loss.item()
             #pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
             #correct += pred.eq(y.view_as(pred)).sum().item()
 
@@ -139,6 +140,6 @@ if __name__ == "__main__":
         test_err = test(epoch)
         train_err_list.append(train_err)
         test_err_list.append(test_err)
-    with open('checkpoints/simpleVAE.npz','wb') as f:
+    with open('checkpoints/simpleVAE_%d.npz' % args.epochs,'wb') as f:
         np.savez(f, train_err = train_err_list, test_err = test_err_list)
     torch.save(model.state_dict(),'checkpoints/VAE_%d.pth' % args.epochs)

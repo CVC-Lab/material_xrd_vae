@@ -18,18 +18,21 @@ def load_material_data(data_location):
 
     
 
-def load_material_data_train_test_split(data_location):
-    X,_,atom_type,_ = load_material_data(data_location)
+def load_material_data_train_test_split(data_location, return_energy=False):
+    X,_,atom_type, e = load_material_data(data_location)
     y = np.array(atom_type - 1, dtype=int)
     for i in range(7):
         cnt = np.count_nonzero(atom_type == (i+1))
-        print("Type %d : %d" % (i+1, cnt))
-    print(np.max(y),np.min(y))
+        #print("Type %d : %d" % (i+1, cnt))
+    #print(np.max(y),np.min(y))
 
     # First train everything
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=9)
-
-    return X_train, X_test, y_train, y_test
+    if return_energy:
+        X_train, X_test, y_train, y_test, e_train, e_test = train_test_split(X, y, e, test_size=0.20, random_state=9)
+        return X_train, X_test, y_train, y_test, e_train, e_test
+    else:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=9)
+        return X_train, X_test, y_train, y_test
 
 
 def safe_log(z):

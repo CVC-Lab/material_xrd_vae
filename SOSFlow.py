@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from torch import nn, optim
 from model.SOSFlowNet import SOSFlowNet,BatchNormFlow,Reverse,FlowSequential
+from model.SOSFlowNet import SOSFlowVAE
 import matplotlib.pyplot as plt
 
 def build_model(input_size, hidden_size, k, r, n_blocks, device=None, **kwargs):
@@ -36,7 +37,16 @@ class SOSFlow:
     
 
         self.device = torch.device("cuda:%d" % args.gpu if args.cuda else "cpu")
-        self.network = build_model(self.input_size, self.hidden_size, self.k, self.r, self.n_blocks, self.device)
+        #self.network = build_model(self.input_size, self.hidden_size, self.k, self.r, self.n_blocks, self.device)
+        self.network = SOSFlowVAE(self.input_size,
+                                    200,
+                                    self.hidden_size,
+                                    7,
+                                    self.k,
+                                    self.r,
+                                    self.n_blocks,
+                                    self.device)
+        self.network.to(self.device)
         self.criterion = nn.MSELoss(reduction='mean')
         self.optimizer = optim.Adam(self.network.parameters(), lr=self.learning_rate, weight_decay=1e-6)
 

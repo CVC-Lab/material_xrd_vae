@@ -17,6 +17,17 @@ def simplevae_elbo_loss_function(recon_x, x, mu, logvar):
 
     return MSE + KLD
 
+def simplevae_elbo_loss_function_with_energy(recon_x, x, mu, logvar, pred_e, e):
+    MSE = nn.MSELoss(reduction='mean')(recon_x, x)
+    MSE_eng = nn.MSELoss(reduction='sum')(pred_e, e)
+    # see Appendix B from VAE paper:
+    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+    # https://arxiv.org/abs/1312.6114
+    # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+
+    return MSE + MSE_eng + KLD, MSE, MSE_eng, KLD
+
 class GMVAELossFunctions:
     eps = 1e-8
 

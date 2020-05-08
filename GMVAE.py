@@ -331,7 +331,7 @@ class GMVAE:
     return original, reconstructed.data.cpu().numpy()
 
 
-  def plot_latent_space(self, data_loader, labels, save=False):
+  def plot_latent_space(self, data_loader, labels, save=True, suffix=None):
     """Plot the latent space learnt by the model
     Args:
         data: (array) corresponding array containing the data
@@ -349,7 +349,10 @@ class GMVAE:
             edgecolor='none', cmap=plt.cm.get_cmap('jet', 10), s = 10)
     plt.colorbar()
     if(save):
-        fig.savefig('latent_space.png')
+        if suffix is not None:
+          fig.savefig('results/latent_space_'+ str(suffix) + '.png')
+        else:
+          fig.savefig('latent_space.png')
     return fig
   
   
