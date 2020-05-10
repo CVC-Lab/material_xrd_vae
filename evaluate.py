@@ -14,11 +14,11 @@ from dataset import ndarrayDataset
 from matplotlib import pyplot as plt
 
 device = torch.device("cuda:0")
-#model = VAENF(3600, 40, PlanarTransformation, 40, 4)
+model = VAENF(3600, 40, PlanarTransformation, 40, 10)
 #model = SimpleVAE(3600, 200, 40)
 #model = build_model(3600, 40, 3, 1, 3)
-model = SOSFlowVAE(3600, 200, 40, 7, 3, 1, 3, device)
-model.load_state_dict(torch.load('checkpoints/SOS_VAE_1000.pth'))
+#model = SOSFlowVAE(3600, 200, 40, 7, 3, 1, 3, device)
+model.load_state_dict(torch.load('checkpoints/VAENF_100.pth'))
 
 data_location = "/mnt/storage/tmwang/Materials/MP.mat"
 _,X_test,_,y_test = load_material_data_train_test_split(data_location)
@@ -33,10 +33,10 @@ print(data.shape)
 data = data.to(device)
 model.to(device)
 
-#x_rec, _,_, energy = model(data)
-x_rec, _  = model(data)
+x_rec, _,_, energy = model(data, energy=True)
+#x_rec, _  = model(data)
 
-#print("Energy: %.4f; Prediction: %.4f" % y_test[0], energy)
+print("Energy: %.4f; Prediction: %.4f" % (y_test[0], energy))
 
 recon_data = x_rec.detach().cpu().numpy()
 
@@ -53,5 +53,5 @@ for row in ax:
         count += 1
 
 plt.show()
-plt.savefig('results/XRD_recon_SOS_VAE_20.png')
+plt.savefig('results/XRD_recon_VAENF_100.png')
 

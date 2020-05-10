@@ -33,6 +33,7 @@ class NormalizingFlow:
         total_loss = 0.
         recon_loss = 0.
         flow_loss = 0.
+        energy_loss = 0.
 
         # accuracy = 0.
         num_batches = 0.
@@ -43,9 +44,9 @@ class NormalizingFlow:
 
 
         # iterate over the dataset
-        for (data, labels) in data_loader:
+        for (data, e) in data_loader:
             data = data.to(self.device)
-            labels= labels.long().to(self.device)
+            e = e.view(-1,1).to(self.device)
 
             optimizer.zero_grad()
 
@@ -53,12 +54,14 @@ class NormalizingFlow:
             # data = data.view(data.size(0), -1)
             
             # forward call
-            zhat, mu, logvar = self.network(data) 
+            zhat, mu, logvar, e_pred = self.network(data, energy=True) 
             log_jacob = self.network.flow.get_sum_log_det()
           
             total_loss_func = self.criterion.VAENF_loss(zhat, data, mu, logvar, log_jacob)
+            energy_loss_func = self.criterion.energy_loss(e_pred, e)
             # accumulate values
             total_loss += total_loss_func.item()
+            energy_loss += energy_loss_func.item()
 
             # perform backpropagation
             total_loss_func.backward()
@@ -80,6 +83,7 @@ class NormalizingFlow:
 
         # average per batch
         total_loss /= num_batches
+        energy_loss /= len(data_loader.dataset)
         print('====> Epoch: {} Average loss per batch: {:.4f};\n'.format(epoch, total_loss))
         
         # # concat all true and predicted labels
@@ -91,7 +95,7 @@ class NormalizingFlow:
         # accuracy = 100.0 * self.metrics.cluster_acc(predicted_labels, true_labels)
         # nmi = 100.0 * self.metrics.nmi(predicted_labels, true_labels)
 
-        return total_loss, recon_loss, flow_loss
+        return total_loss, recon_loss, flow_loss, energy_loss
 
     def test(self, epoch, data_loader, return_loss=False):
         """Test the model with new data
@@ -106,26 +110,29 @@ class NormalizingFlow:
         total_loss = 0.
         recon_loss = 0.
         flow_loss = 0.
+        energy_loss = 0.
 
         num_batches = 0
         accuracy = 0.
         
 
         with torch.no_grad():
-            for data, labels in data_loader:
+            for data, e in data_loader:
                 data = data.to(self.device)
-                labels= labels.long().to(self.device)
+                e = e.view(-1,1).to(self.device)
             
                 # flatten data
                 # data = data.view(data.size(0), -1)
 
                 # forward call
                 
-                zhat, mu, logvar = self.network(data) 
+                zhat, mu, logvar, e_pred = self.network(data, energy=True) 
                 log_jacob = self.network.flow.get_sum_log_det()
                 total_loss_func = self.criterion.VAENF_loss(zhat, data, mu, logvar, log_jacob)
+                energy_loss_func = self.criterion.energy_loss(e_pred, e)
                 # accumulate values
                 total_loss += total_loss_func.item()
+                energy_loss += energy_loss_func.item()
                 num_batches += 1. 
         
 
@@ -133,11 +140,12 @@ class NormalizingFlow:
         # average per batch
         if return_loss:
             total_loss /= num_batches
+            energy_loss /= len(data_loader.dataset)
         
         print('====> Test Epoch: {} Average loss per batch: {:.4f}\n'.format(epoch, total_loss))
 
         if return_loss:
-            return total_loss, recon_loss, flow_loss
+            return total_loss, recon_loss, flow_loss, energy_loss
 
 
 
@@ -152,10 +160,10 @@ class NormalizingFlow:
         train_history_err, val_history_err = [], []
 
         for epoch in range(1, self.num_epochs + 1):
-            train_loss,_,_ = self.train_epoch(epoch, self.optimizer, train_loader)
-            val_loss,_,_ = self.test(epoch, val_loader, True)
-            train_history_err.append(train_loss)
-            val_history_err.append(val_loss)
+            train_loss,_,_,energy_loss = self.train_epoch(epoch, self.optimizer, train_loader)
+            val_loss,_,_,val_energy_loss = self.test(epoch, val_loader, True)
+            train_history_err.append(energy_loss)
+            val_history_err.append(val_energy_loss)
 
 
         return {'train_history_err' : train_history_err, 'val_history_err': val_history_err}

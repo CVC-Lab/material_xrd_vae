@@ -22,10 +22,10 @@ atom_type = input_mat[:,1]
 energy = input_mat[:,2] # target value
 X = input_mat[:,3:] # training data
 idx = (energy<10)
-X = X[idx,:]
 
-y = energy[idx]
-atom_type = atom_type[idx]
+#X = X[idx,:]
+y = energy
+#atom_type = atom_type[idx]
 
 # for i in range(7):
 #     cnt = np.count_nonzero(atom_type == (i+1))
@@ -52,7 +52,7 @@ parser.add_argument('--batch-size', type=int, default=256, metavar='N',
                     help='input batch size for training (default: 128)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-parser.add_argument('--epochs', type=int, default=100, metavar='N',
+parser.add_argument('--epochs', type=int, default=300, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -60,7 +60,7 @@ parser.add_argument('--seed', type=int, default=9, metavar='S',
                     help='random seed (default: 9)')
 parser.add_argument('--log-interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--gpu', type=int, default=0, metavar='G',
+parser.add_argument('--gpu', type=int, default=1, metavar='G',
                     help='gpu card id (default: 0)')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -80,7 +80,8 @@ test_losses = np.zeros((args.epochs))
 
 model = MLP(3600,200,40).to(device)
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
-criterion = nn.MSELoss(reduction='sum')
+def criterion(y, y_pred):
+    return torch.sum(torch.abs(y- y_pred))
 
 
 

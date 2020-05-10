@@ -60,6 +60,7 @@ class SimpleVAE(nn.Module):
         self.latent = latent_dim
         self.contain_energy_prediction = energy
         self.fc1 = nn.Linear(self.input, self.hidden)
+        self.dropout = nn.Dropout(p=0.25)
         self.relu1 = nn.ReLU()
         self.fc21 = nn.Linear(self.hidden, self.latent)
         self.fc22 = nn.Linear(self.hidden, self.latent)
@@ -69,7 +70,7 @@ class SimpleVAE(nn.Module):
         self.energy_model = MLP_2layer(self.latent, int(self.latent/2), 1)
 
     def encode(self, x):
-        out = self.relu1(self.fc1(x))
+        out = self.relu1(self.dropout(self.fc1(x)))
         return self.fc21(out), self.fc22(out)
     
     def reparameterize(self, mu, logvar):
@@ -85,6 +86,11 @@ class SimpleVAE(nn.Module):
         mu, logvar = self.encode(x)
         z = self.reparameterize(mu, logvar)
         if self.contain_energy_prediction:
-            return self.decode(z), mu, logvar, self.energy_model(z)
+            return self.decode(z), mu, logvar, z, self.energy_model(z)
         else:
-            return self.decode(z), mu, logvar
+            return self.decode(z), mu, logvar, z
+    
+    def latent_space(self, x):
+        mu, logvar = self.encode(x)
+        z = self.reparameterize(mu, logvar)
+        return z

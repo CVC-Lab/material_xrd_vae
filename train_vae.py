@@ -55,7 +55,7 @@ from model.baselines import SimpleVAE
 parser = argparse.ArgumentParser(description='Test')
 parser.add_argument('--batch-size', type=int, default=256, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=100, metavar='N',
+parser.add_argument('--epochs', type=int, default=20, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -83,7 +83,7 @@ test_loader = DataLoader(test_dataset, batch_size=1000)
 test_losses = np.zeros((args.epochs))
 
 model = SimpleVAE(3600,200,40).to(device)
-optimizer = optim.Adam(model.parameters(), lr=1e-4)
+optimizer = optim.Adam(model.parameters(), lr=1e-5)
 
 
 def train(epoch):
@@ -94,21 +94,21 @@ def train(epoch):
         data = data.to(device)
         y = y.view(-1,1).to(device)
         optimizer.zero_grad()
-        x_pred, mu, logvar, y_pred = model(data)
-        loss, _,_, eng_loss = simplevae_elbo_loss_function_with_energy(x_pred, data, mu, logvar, y_pred, y)
-        loss.backward()
+        x_pred, mu, logvar, _, y_pred = model(data)
+        loss, _, eng_loss, _ = simplevae_elbo_loss_function_with_energy(x_pred, data, mu, logvar, y_pred, y)
         train_loss += eng_loss.item()
+        loss.backward()
         optimizer.step()
         #pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
         #correct += pred.eq(y.view_as(pred)).sum().item()
         if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}/{:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader),
+                100. * batch_idx / len(train_loader), eng_loss.item()/ len(data),
                 loss.item() / len(data)))
+
     train_loss /= len(train_loader.dataset)
-    print('====> Epoch: {} Average Evergy loss: {:.4f}'.format(
-          epoch, train_loss))
+    print('====> Epoch: {} Average Evergy loss: {:.4f}'.format(epoch, train_loss))
     return train_loss
 
 
@@ -120,8 +120,8 @@ def test(epoch):
         for i, (data, y) in enumerate(test_loader):
             data = data.to(device)
             y = y.view(-1,1).to(device)
-            x_pred, mu, logvar, y_pred = model(data)
-            _, _, _, eng_loss = simplevae_elbo_loss_function_with_energy(x_pred, data, mu, logvar, y_pred, y)
+            x_pred, mu, logvar, _, y_pred = model(data)
+            _, _, eng_loss, _,= simplevae_elbo_loss_function_with_energy(x_pred, data, mu, logvar, y_pred, y)
             test_loss += eng_loss.item()
             #pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
             #correct += pred.eq(y.view_as(pred)).sum().item()

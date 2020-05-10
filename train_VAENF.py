@@ -32,7 +32,7 @@ parser.add_argument('--gpuID', type=int, default=0,
                     help='set gpu id to use (default: 0)')
 
 ## Training
-parser.add_argument('--epochs', type=int, default=20,
+parser.add_argument('--epochs', type=int, default=100,
                     help='number of total epochs to run (default: 200)')
 parser.add_argument('--batch_size', default=64, type=int,
                     help='mini-batch size (default: 64)')
@@ -70,11 +70,11 @@ if args.cuda:
 ## Data Loader
 ########################################################
 data_location = "/mnt/storage/tmwang/Materials/MP.mat"
-X_train,X_test,y_train,y_test = load_material_data_train_test_split(data_location)
-train_dataset = ndarrayDataset(X_train,y_train)
+X_train,X_test,y_train,y_test,e_train,e_test = load_material_data_train_test_split(data_location, return_energy=True)
+train_dataset = ndarrayDataset(X_train,e_train)
 train_loader = DataLoader(train_dataset, batch_size = args.batch_size, shuffle=True)
 train_losses = np.zeros((args.epochs))
-test_dataset = ndarrayDataset(X_test,y_test)
+test_dataset = ndarrayDataset(X_test,e_test)
 test_loader = DataLoader(test_dataset, batch_size = args.batch_size_val)
 test_losses = np.zeros((args.epochs))
 

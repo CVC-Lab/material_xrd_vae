@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
+from model.baselines import MLP_2layer
 
 #######################################
 ## Source ： https://github.com/weixsong/NormalizingFlow
@@ -433,7 +434,7 @@ class VAE(nn.Module):
 
         # first fully connected layer
         self.fc1 = nn.Linear(input_dim, 400)
-
+        self.dropout = nn.Dropout(p=0.25)
         # parallel layers
         # encode mean
         self.fc21_mean = nn.Linear(400, num_latent)
@@ -500,7 +501,7 @@ class VAENF(VAE):
 
         # normalizing flow
         self.flow = NormalizingFlowNet(flow_transform, flow_latent, flow_len)
-
+        self.energy_prediction = MLP_2layer(num_latent, int(num_latent/2), 1)
         # encode flow parameters ( parallel to mean and var )
         self.fc23_flow = nn.Linear(400, self.flow.nParams * flow_len)
 
@@ -510,8 +511,11 @@ class VAENF(VAE):
         return (self.fc21_mean(h), self.fc22_var(h),
                 self.fc23_flow(h).mean(dim=0).chunk(self.flow.K, dim=0))
 
-    def forward(self, x):
+    def forward(self, x, energy=False):
         mu, logvar, params = self.encode(x.view(-1, self.input_dim))
         z = self.reparameterize(mu, logvar)
         z = self.flow.forward(z, params)
-        return self.decode(z), mu, logvar
+        if energy:
+            return self.decode(z), mu, logvar, self.energy_prediction(z)
+        else:
+            return self.decode(z), mu, logvar
