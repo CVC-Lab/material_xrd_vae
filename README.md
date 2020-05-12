@@ -8,3 +8,13 @@ You need a python environment with the following package to start with this proj
 *   pytorch
 *   numpy,scipy,matplotlib
 *   scikit-learn
+
+- [ ] Mercury
+    - [x] Venus
+    - [x] Earth (Orbit/Moon)
+    - [x] Mars
+- [ ] Jupiter
+- [ ] Saturn
+- [ ] Uranus
+- [ ] Neptune
+- [ ] Comet Haley
