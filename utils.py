@@ -13,7 +13,25 @@ def load_material_data(data_location):
     atom_type = input_mat[:,1]
     energy = input_mat[:,2] # target value
     X = input_mat[:,3:] # training data
+    return X,id,atom_type,energy
 
+    
+
+def load_material_data_v2(data_location):
+
+    data = sio.loadmat(data_location)
+
+    input_mat = data['MP']
+
+    # count data in different classes
+    id = input_mat[:,0]
+    atom_type = input_mat[:,1]
+    X = input_mat[:,2:3602] # training data
+    spacegroup = input_mat[:, 3602]
+    bandgap = input_mat[:, 3603]
+    energy = input_mat[:,3604] # target value
+    magneticmoment = input_mat[:,3605]
+    energyabovehull = input_mat[:,3606]
     return X,id,atom_type,energy
 
     

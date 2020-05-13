@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from dataset import ndarrayDataset
 from model.baselines import MLP
 
-data_location = "/mnt/storage/tmwang/Materials/MP.mat"
+data_location = "/mnt/storage/tmwang/Materials/MP_v1.mat"
 
 data = sio.loadmat(data_location)
 
@@ -58,7 +58,7 @@ parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
 parser.add_argument('--seed', type=int, default=9, metavar='S',
                     help='random seed (default: 9)')
-parser.add_argument('--log-interval', type=int, default=10, metavar='N',
+parser.add_argument('--log-interval', type=int, default=10000, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--gpu', type=int, default=1, metavar='G',
                     help='gpu card id (default: 0)')
@@ -79,9 +79,9 @@ test_loader = DataLoader(test_dataset, batch_size = args.test_batch_size)
 test_losses = np.zeros((args.epochs))
 
 model = MLP(3600,200,40).to(device)
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
-def criterion(y, y_pred):
-    return torch.sum(torch.abs(y- y_pred))
+optimizer = optim.Adam(model.parameters(), lr=1e-5)
+def criterion(y_pred, y):
+    return torch.mean(torch.abs((y- y_pred)/y))
 
 
 
@@ -96,7 +96,7 @@ def train(epoch):
         y_pred = model(data)
         loss = criterion(y_pred, y)
         loss.backward()
-        train_loss += loss.item()
+        train_loss += (loss.item() * len(data))
         optimizer.step()
         #pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
         #correct += pred.eq(y.view_as(pred)).sum().item()
@@ -120,7 +120,7 @@ def test(epoch):
             data = data.to(device)
             y = y.view(-1,1).to(device)
             y_pred = model(data)
-            test_loss += (criterion(y_pred, y).item())
+            test_loss += (criterion(y_pred, y).item() * len(data))
             #pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
             #correct += pred.eq(y.view_as(pred)).sum().item()
 
@@ -138,6 +138,6 @@ if __name__ == "__main__":
         test_err = test(epoch)
         train_err_list.append(train_err)
         test_err_list.append(test_err)
-    with open('checkpoints/baseline.npz','wb') as f:
+    with open('checkpoints/baseline_%d_2.npz' % args.epochs,'wb') as f:
         np.savez(f, train_err = train_err_list, test_err = test_err_list)
 
