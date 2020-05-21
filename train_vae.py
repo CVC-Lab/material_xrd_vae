@@ -55,7 +55,7 @@ from model.baselines import SimpleVAE
 parser = argparse.ArgumentParser(description='Test')
 parser.add_argument('--batch-size', type=int, default=256, metavar='N',
                     help='input batch size for training (default: 128)')
-parser.add_argument('--epochs', type=int, default=10000, metavar='N',
+parser.add_argument('--epochs', type=int, default=2500, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -96,7 +96,7 @@ def train(epoch):
         optimizer.zero_grad()
         x_pred, mu, logvar, _, y_pred = model(data)
         loss, _, eng_loss, _ = simplevae_elbo_loss_function_with_energy(x_pred, data, mu, logvar, y_pred, y)
-        train_loss += (eng_loss.item() * len(data))
+        train_loss += (eng_loss.item())
         loss.backward()
         optimizer.step()
         #pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
@@ -122,7 +122,7 @@ def test(epoch):
             y = y.view(-1,1).to(device)
             x_pred, mu, logvar, _, y_pred = model(data)
             _, _, eng_loss, _,= simplevae_elbo_loss_function_with_energy(x_pred, data, mu, logvar, y_pred, y)
-            test_loss += (eng_loss.item() * len(data))
+            test_loss += (eng_loss.item())
             #pred = y_pred.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
             #correct += pred.eq(y.view_as(pred)).sum().item()
 
@@ -140,6 +140,6 @@ if __name__ == "__main__":
         test_err = test(epoch)
         train_err_list.append(train_err)
         test_err_list.append(test_err)
-    with open('checkpoints/simpleVAE_%d_2.npz' % args.epochs,'wb') as f:
+    with open('checkpoints/simpleVAE_%d.npz' % args.epochs,'wb') as f:
         np.savez(f, train_err = train_err_list, test_err = test_err_list)
-    torch.save(model.state_dict(),'checkpoints/VAE_%d_2.pth' % args.epochs)
+    torch.save(model.state_dict(),'checkpoints/VAE_%d.pth' % args.epochs)

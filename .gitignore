@@ -134,5 +134,7 @@ checkpoints/
 results/
 .vscode/
 tmp.py
+globalvar.py
 *.png
+*.svg
 .vscode/settings.json

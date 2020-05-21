@@ -37,7 +37,6 @@ add_colorbar(im)
 #cbar.set_ticks([-4,4])
 plt.axis('off')
 plt.savefig('results/intensity_array_average.png', bbox_inches = 'tight', pad_inches = 0, dpi=1000)
-plt.savefig('results/intensity_array_average.pdf', bbox_inches = 'tight', pad_inches = 0)
 plt.savefig('results/intensity_array_average.svg', bbox_inches = 'tight', pad_inches = 0)
 
 plt.clf()
@@ -49,7 +48,7 @@ plt.colorbar()
 # of ax and the padding between cax and ax will be fixed at 0.05 inch.
 
 plt.axis('off')
-plt.savefig('results/intensity_array.pdf', bbox_inches = 'tight', pad_inches = 0)
+plt.savefig('results/intensity_array.png', bbox_inches = 'tight', pad_inches = 0)
 plt.savefig('results/intensity_array.svg', bbox_inches = 'tight', pad_inches = 0)
 
 # spectral overlap
@@ -60,6 +59,32 @@ for i in range(36):
 plt.savefig('results/intensity_lines.png', bbox_inches = 'tight', pad_inches = 0)
 plt.savefig('results/intensity_lines.svg', bbox_inches = 'tight', pad_inches = 0)
 
+
+x = np.linspace(0,180,num=100,endpoint=False)
+X_sampled= X[::100,:]
+for i in range(36):
+    print("Generating Row %d" % (i+1))
+    plt.clf()
+    plt.title("Row %d" % (i+1))
+    plt.xlabel("Angle")
+    plt.ylabel("Intensity")
+    for j in range(X_sampled.shape[0]):
+        plt.plot(x, X_sampled[j,i*100:(i+1)*100]+j*0.1)   
+    plt.savefig('results/intensity_lines/intensity_%d.png' % (i+1), bbox_inches = 'tight', pad_inches = 0)
+    plt.savefig('results/intensity_lines/intensity_%d.svg' % (i+1), bbox_inches = 'tight', pad_inches = 0)
+
+
+plt.clf()
+im = plt.imshow(np.tanh(X), interpolation = 'nearest', aspect = 'auto')
+im.set_cmap('nipy_spectral')
+plt.colorbar()
+#divider = make_axes_locatable(ax)
+#cax = divider.append_axes("right", size="5%", pad=0.05)
+#cbar = plt.colorbar(im, cax=cax)
+#cbar.set_ticks([-4,4])
+plt.axis('off')
+plt.savefig('results/intensity_array_X.png', bbox_inches = 'tight', pad_inches = 0, dpi=1000)
+plt.savefig('results/intensity_array_X.svg', bbox_inches = 'tight', pad_inches = 0)
 
 # data clustering
 yield_cluster=False

@@ -52,7 +52,7 @@ parser.add_argument('--batch-size', type=int, default=256, metavar='N',
                     help='input batch size for training (default: 128)')
 parser.add_argument('--test-batch-size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-parser.add_argument('--epochs', type=int, default=300, metavar='N',
+parser.add_argument('--epochs', type=int, default=2500, metavar='N',
                     help='number of epochs to train (default: 10)')
 parser.add_argument('--no-cuda', action='store_true', default=False,
                     help='enables CUDA training')
@@ -60,7 +60,7 @@ parser.add_argument('--seed', type=int, default=9, metavar='S',
                     help='random seed (default: 9)')
 parser.add_argument('--log-interval', type=int, default=10000, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--gpu', type=int, default=1, metavar='G',
+parser.add_argument('--gpu', type=int, default=3, metavar='G',
                     help='gpu card id (default: 0)')
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -138,6 +138,6 @@ if __name__ == "__main__":
         test_err = test(epoch)
         train_err_list.append(train_err)
         test_err_list.append(test_err)
-    with open('checkpoints/baseline_%d_2.npz' % args.epochs,'wb') as f:
+    with open('checkpoints/baseline_%d.npz' % args.epochs,'wb') as f:
         np.savez(f, train_err = train_err_list, test_err = test_err_list)
-
+    torch.save(model.state_dict(),'checkpoints/MLP_%d.pth' % args.epochs)

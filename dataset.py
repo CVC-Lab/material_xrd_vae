@@ -5,7 +5,7 @@ class ndarrayDataset(Dataset):
     """simple dataset"""
 
     def __init__(self, X, y):
-        super(Dataset, self).__init__()
+        super(ndarrayDataset, self).__init__()
         self.X = torch.from_numpy(X).float()
         self.y = torch.from_numpy(y).float()
 

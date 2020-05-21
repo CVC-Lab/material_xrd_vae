@@ -22,6 +22,10 @@ def load_material_data_v2(data_location):
     data = sio.loadmat(data_location)
 
     input_mat = data['MP']
+    print("Number of samples: %d" % input_mat.shape[0])
+    # remove nan lines
+    input_mat = input_mat[~np.isnan(input_mat).any(axis=1)]
+    print("Number of samples after remove nan: %d" % input_mat.shape[0])
 
     # count data in different classes
     id = input_mat[:,0]
@@ -32,7 +36,10 @@ def load_material_data_v2(data_location):
     energy = input_mat[:,3604] # target value
     magneticmoment = input_mat[:,3605]
     energyabovehull = input_mat[:,3606]
-    return X,id,atom_type,energy
+
+    y = input_mat[:, 3602:]
+
+    return id, atom_type, X, y
 
     
 
@@ -51,6 +58,17 @@ def load_material_data_train_test_split(data_location, return_energy=False):
     else:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=9)
         return X_train, X_test, y_train, y_test
+
+def load_material_data_train_test_split_v2(data_location, return_id=False):
+    id, atom_type, X, y = load_material_data_v2(data_location)
+    # First train everything
+    if return_id:
+        X_train, X_test, _, _, y_train, y_test, id_train, id_test = train_test_split(X, atom_type, y, id, test_size=0.20, random_state=9)
+        return X_train, X_test, y_train, y_test, id_train, id_test
+    else:
+        X_train, X_test, _, _, y_train, y_test = train_test_split(X, atom_type, y, test_size=0.20, random_state=9)
+        return X_train, X_test, y_train, y_test
+
 
 
 def safe_log(z):
