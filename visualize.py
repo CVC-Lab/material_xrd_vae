@@ -6,7 +6,9 @@ from mpl_toolkits import axes_grid1
 import numpy as np
 
 data_location = "/mnt/storage/tmwang/Materials/MP_v2.mat"
-X,_,_,energy = load_material_data_v2(data_location)
+X,_,_,y = load_material_data_v2(data_location)
+energy= y[:,2]
+exit(0)
 
 # Intensity Image
 intensity_mean =np.zeros([36,100])

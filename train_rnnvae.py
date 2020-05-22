@@ -30,7 +30,7 @@ parser.add_argument('--gpuID', type=int, default=0,
                     help='set gpu id to use (default: 0)')
 
 ## Training
-parser.add_argument('--epochs', type=int, default=100,
+parser.add_argument('--epochs', type=int, default=200,
                     help='number of total epochs to run (default: 200)')
 parser.add_argument('--batch_size', default=512, type=int,
                     help='mini-batch size (default: 64)')
@@ -49,12 +49,12 @@ parser.add_argument('--lr_decay', default=0.5, type=float,
 parser.add_argument('--num_classes', type=int, default=7,
                     help='number of classes (default: 7)')
 parser.add_argument('--hidden_size', default=20, type=int,
-                    help='gaussian size (default: 20)')
+                    help='gru (default: 20)')
 parser.add_argument('--flow_dim', default=10, type=int,
                     help='gaussian size (default: 20)')
 parser.add_argument('--input_size', default=36, type=int,
                     help='input size (default: 3600)')
-parser.add_argument('--n-blocks', default=4, type=int,
+parser.add_argument('--n-blocks', default=2, type=int,
                     help='number of blocks (default: 4)')
 
 args = parser.parse_args()
@@ -90,6 +90,10 @@ rnnvae = RNNVAE(args)
 history_loss = rnnvae.train(train_loader, test_loader)
 
 with open('checkpoints/rnnvae_%d.npz' % args.epochs,'wb') as f:
-  np.savez(f, train_loss = history_loss['train_history_err'], test_loss = history_loss['val_history_err'])
+  np.savez(f, 
+  train_loss = history_loss['train_history_err'], 
+  test_loss = history_loss['val_history_err'], 
+  train_smape = history_loss['smape_train'],
+  test_smape = history_loss['smape_test'])
 torch.save(rnnvae.network.state_dict(), 'checkpoints/RNN_VAE_%d.pth' % args.epochs)
 

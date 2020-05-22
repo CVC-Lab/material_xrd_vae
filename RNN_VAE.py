@@ -31,8 +31,8 @@ class RNNVAE:
         FLOW = sum_log_det.mean()
         return MSE+PRED+FLOW, MSE, PRED, FLOW
     
-    def mape(self, y, pred_y):
-        return torch.sum(torch.abs((y-pred_y)/y))
+    def smape(self, y, pred_y):
+        return torch.sum(torch.abs(y-pred_y)/(torch.abs(pred_y) + torch.abs(y)),0)
 
     def train_epoch(self, epoch, optimizer, data_loader):
         """Train the model for one epoch
@@ -47,13 +47,12 @@ class RNNVAE:
         recon_loss = 0.
         flow_loss = 0.
         label_loss = 0.
-
+        smape = torch.zeros([1,5])
         # accuracy = 0.
         num_batches = 0.
         
         # true_labels_list = []
         # predicted_labels_list = []
-        
 
         # iterate over the dataset
         for (data, y) in data_loader:
@@ -72,9 +71,11 @@ class RNNVAE:
             recon, y_pred = self.network(data, data, teaching_ratio= 0.75) 
             log_jacob = self.network.flow.get_sum_log_det()
             total, MSE, PRED, FLOW = self.loss_function(data, recon, y, y_pred, log_jacob)
+            smape += self.smape(y, y_pred).detach().cpu()
             # accumulate values
             total_loss += total.item()
             label_loss += PRED.item()
+            
 
             # perform backpropagation
             total.backward()
@@ -85,7 +86,6 @@ class RNNVAE:
 
             # true_labels_list.append(labels)
             # predicted_labels_list.append(predicted)   
-        
             num_batches += 1. 
             if num_batches % 50 == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -97,6 +97,7 @@ class RNNVAE:
         # average per batch
         total_loss /= num_batches
         label_loss /= num_batches
+        smape /= len(data_loader.dataset)
 
         print('====> Epoch: {} Average loss per batch: {:.4f};\n'.format(epoch, total_loss))
         
@@ -109,7 +110,7 @@ class RNNVAE:
         # accuracy = 100.0 * self.metrics.cluster_acc(predicted_labels, true_labels)
         # nmi = 100.0 * self.metrics.nmi(predicted_labels, true_labels)
 
-        return total_loss, label_loss
+        return total_loss, label_loss, smape.numpy()
 
     def test(self, epoch, data_loader, return_loss=False):
         """Test the model with new data
@@ -126,6 +127,7 @@ class RNNVAE:
         flow_loss = 0.
         label_loss = 0.
         num_batches = 0.
+        smape = torch.zeros([1,5])
 
         with torch.no_grad():
             for data, y in data_loader:
@@ -145,19 +147,22 @@ class RNNVAE:
                 # accumulate values
                 total_loss += total.item()
                 label_loss += PRED.item()
+                smape += self.smape(y, y_pred).detach().cpu()
                 num_batches += 1. 
         
-
+      
 
         # average per batch
         if return_loss:
             total_loss /= num_batches
             label_loss /= num_batches
         
-        print('====> Test Epoch: {} Average loss per batch: {:.4f}\n'.format(epoch, total_loss))
+        smape /= len(data_loader.dataset)
+        print('====> Test Epoch: {} Average loss per batch: {:.4f};'.format(epoch, total_loss))
+        print('====> SMAPE: ' + str(smape))
 
         if return_loss:
-            return total_loss, label_loss
+            return total_loss, label_loss, smape.numpy()
 
 
 
@@ -170,12 +175,16 @@ class RNNVAE:
             output: (dict) contains the history of train/val loss
         """
         train_history_err, val_history_err = [], []
+        train_history_smape = np.zeros([self.num_of_labels,self.num_epochs])
+        test_history_smape = np.zeros([self.num_of_labels,self.num_epochs])
 
         for epoch in range(1, self.num_epochs + 1):
-            train_loss,energy_loss = self.train_epoch(epoch, self.optimizer, train_loader)
-            val_loss,val_energy_loss = self.test(epoch, val_loader, True)
+            train_loss,energy_loss,smape_train = self.train_epoch(epoch, self.optimizer, train_loader)
+            val_loss,val_energy_loss, smape_test = self.test(epoch, val_loader, True)
             train_history_err.append(energy_loss)
             val_history_err.append(val_energy_loss)
+            train_history_smape[:,epoch-1] = smape_train
+            test_history_smape[:,epoch-1] = smape_test
 
 
-        return {'train_history_err' : train_history_err, 'val_history_err': val_history_err}
+        return {'train_history_err' : train_history_err, 'val_history_err': val_history_err, 'smape_train': train_history_smape, 'smape_test': test_history_smape}
