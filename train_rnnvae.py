@@ -30,9 +30,9 @@ parser.add_argument('--gpuID', type=int, default=0,
                     help='set gpu id to use (default: 0)')
 
 ## Training
-parser.add_argument('--epochs', type=int, default=200,
+parser.add_argument('--epochs', type=int, default=300,
                     help='number of total epochs to run (default: 200)')
-parser.add_argument('--batch_size', default=512, type=int,
+parser.add_argument('--batch_size', default=256, type=int,
                     help='mini-batch size (default: 64)')
 parser.add_argument('--batch_size_val', default=1024, type=int,
                     help='mini-batch size of validation (default: 200)')
@@ -50,11 +50,11 @@ parser.add_argument('--num_classes', type=int, default=7,
                     help='number of classes (default: 7)')
 parser.add_argument('--hidden_size', default=20, type=int,
                     help='gru (default: 20)')
-parser.add_argument('--flow_dim', default=10, type=int,
+parser.add_argument('--flow_dim', default=3, type=int,
                     help='gaussian size (default: 20)')
 parser.add_argument('--input_size', default=36, type=int,
                     help='input size (default: 3600)')
-parser.add_argument('--n-blocks', default=2, type=int,
+parser.add_argument('--n-blocks', default=10, type=int,
                     help='number of blocks (default: 4)')
 
 args = parser.parse_args()

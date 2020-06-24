@@ -17,13 +17,13 @@ from matplotlib import pyplot as plt
 from sklearn.model_selection import train_test_split
 
 device = torch.device("cuda:3")
-model = RNNVAENet(36, 20, 10, 36, 5, 2, device)
+model = RNNVAENet(36, 36, 20, 36, 5, 4, device)
 #model = VAENF(3600, 40, PlanarTransformation, 40, 10)
 #model = SimpleVAE(3600, 200, 40)
 #model = MLP(3600,200,40)
 #model = build_model(3600, 40, 3, 1, 3)
 #model = SOSFlowVAE(3600, 200, 40, 7, 3, 1, 3, device)
-model.load_state_dict(torch.load('checkpoints/RNN_VAE_200.pth'))
+model.load_state_dict(torch.load('checkpoints/RNN_VAE_3100.pth'))
 model.to(device)
 
 data_location = "/mnt/storage/tmwang/Materials/MP_v1.mat"
@@ -117,5 +117,5 @@ print(data.view(-1).cpu().numpy()[900:910])
 plt.plot(angle,data.view(-1).cpu().numpy(), label = 'ground truth')
 plt.legend()
 plt.show()
-plt.savefig('results/XRD_vector_RNNVAE_200.png')
+plt.savefig('results/XRD_vector_RNNVAE_3100.png')
 

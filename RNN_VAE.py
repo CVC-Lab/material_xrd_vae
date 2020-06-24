@@ -29,7 +29,7 @@ class RNNVAE:
         MSE = nn.MSELoss(reduction='mean')(recon_x, x)
         PRED = nn.MSELoss(reduction='mean')(pred_y, y)
         FLOW = sum_log_det.mean()
-        return MSE+PRED+FLOW, MSE, PRED, FLOW
+        return MSE+PRED, MSE, PRED, FLOW
     
     def smape(self, y, pred_y):
         return torch.sum(torch.abs(y-pred_y)/(torch.abs(pred_y) + torch.abs(y)),0)
@@ -68,13 +68,15 @@ class RNNVAE:
             # data = data.view(data.size(0), -1)
             
             # forward call
-            recon, y_pred = self.network(data, data, teaching_ratio= 0.75) 
+            recon, y_pred = self.network(data, data, teaching_ratio= 0.25) 
             log_jacob = self.network.flow.get_sum_log_det()
             total, MSE, PRED, FLOW = self.loss_function(data, recon, y, y_pred, log_jacob)
             smape += self.smape(y, y_pred).detach().cpu()
             # accumulate values
             total_loss += total.item()
             label_loss += PRED.item()
+
+            #print(MSE.item(), PRED.item(), FLOW.item())
             
 
             # perform backpropagation

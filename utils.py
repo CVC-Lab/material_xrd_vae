@@ -1,7 +1,7 @@
 import scipy.io as sio
 import numpy as np
 from sklearn.model_selection import train_test_split
-
+import sklearn.preprocessing as preprocessing 
 def load_material_data(data_location):
 
     data = sio.loadmat(data_location)
@@ -36,7 +36,6 @@ def load_material_data_v2(data_location):
     energy = input_mat[:,3604] # target value
     magneticmoment = input_mat[:,3605]
     energyabovehull = input_mat[:,3606]
-
     y = input_mat[:, 3602:]
 
     return id, atom_type, X, y
@@ -61,6 +60,8 @@ def load_material_data_train_test_split(data_location, return_energy=False):
 
 def load_material_data_train_test_split_v2(data_location, return_id=False):
     id, atom_type, X, y = load_material_data_v2(data_location)
+    y = preprocessing.scale(y)
+    print(y.mean(axis=0))
     # First train everything
     if return_id:
         X_train, X_test, _, _, y_train, y_test, id_train, id_test = train_test_split(X, atom_type, y, id, test_size=0.20, random_state=9)
