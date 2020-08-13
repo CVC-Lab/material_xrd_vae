@@ -27,6 +27,16 @@ def simplevae_elbo_loss_function_with_energy(recon_x, x, mu, logvar, pred_e, e):
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     return 0.1 * MSE + MAPE_eng + 0.01 * KLD, MSE, MAPE_eng, KLD
 
+def neg_hscore(f,g):
+    # Soft-HGR(Hirschfeld-Gebelein-Ryenyi) for two model
+	f0 = f - torch.mean(f,0)
+	g0 = g - torch.mean(g,0)
+	corr = torch.mean(torch.sum(f0*g0,1))
+	cov_f = torch.mm(torch.t(f0),f0) / (f0.size()[0]-1.)
+	cov_g = torch.mm(torch.t(g0),g0) / (g0.size()[0]-1.)
+	return - corr + torch.trace(torch.mm(cov_f, cov_g)) / 2.
+
+
 class GMVAELossFunctions:
     eps = 1e-8
 
