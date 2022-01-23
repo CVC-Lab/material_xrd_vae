@@ -5,7 +5,7 @@ This is the repository for material project ML task.
 
 You need a python environment with the following package to start with this project:
 
-*   pytorch
+*   pytorch==1.4
 *   numpy,scipy,matplotlib
 *   scikit-learn
 
