@@ -8,13 +8,19 @@ import scipy.io as sio
 import numpy as np
 from sklearn.model_selection import train_test_split
 from dataset import ndarrayDataset
+import pickle
+import os
 
 
-data_location = "/mnt/storage/tmwang/Materials/MP_v1.mat"
+data_location = "./data/"
 
-data = sio.loadmat(data_location)
+energy = np.array(pickle.load(open(os.path.join(data_location,'xrd.txt'),'rb')))
+id = np.array(pickle.load(open(os.path.join(data_location,'xrd.txt'),'rb')))
+params = np.array(pickle.load(open(os.path.join(data_location,'xrd.txt'),'rb')))
+xrd = np.array(pickle.load(open(os.path.join(data_location,'xrd.txt'),'rb')))
 
-input_mat = data['MP']
+
+#input_mat = data['MP']
 
 # count data in different classes
 id = input_mat[:,0]

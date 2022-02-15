@@ -138,3 +138,8 @@ globalvar.py
 *.png
 *.svg
 .vscode/settings.json
+*.npz
+*.pth
+*.csv
+
+data/
