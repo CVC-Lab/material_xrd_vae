@@ -3,17 +3,14 @@ This is the repository for material project ML task.
 
 ## Instruction
 
-You need a python environment with the following package to start with this project:
+You need a python environment with the following package as minimum to start with this project:
 
-*   pytorch==1.4
+*   pytorch
 *   numpy,scipy,matplotlib
 *   scikit-learn
+*   pniggli
 
-- [ ] Visualize XRD Array
-    - [ ] Image based
-    - [ ] Spectral based
-    - [ ] Cluster based
-- [ ] RNN Model
-- [ ] Comparison Test
-    - [ ] Pure VAE
-    - [ ] VAE + Properties
+## Where to start
+
+Check the jupter notebooks first. For material data, you need to obtain it via Yi Wang or Thomas Ghorbanian.
+

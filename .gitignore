@@ -141,5 +141,8 @@ globalvar.py
 *.npz
 *.pth
 *.csv
+*.txt
+*.npy 
+*.pkl
 
 data/

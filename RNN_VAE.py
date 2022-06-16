@@ -2,6 +2,8 @@ import torch
 import numpy as np
 from torch import nn, optim
 from model.RNNVAENet import RNNVAENet
+
+# TODO: Working in Progress
 class RNNVAE:
     def __init__(self, args):
         self.input_size = args.input_size
